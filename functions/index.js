@@ -1,5 +1,12 @@
 const crypto = require('crypto')
 
+function GetDate(){
+    const ptDate = Date.now()
+    let newDate = new Date(ptDate)
+
+    return newDate
+}
+
 function EncryptJSON(Data,Settings){
     /*
      * Data: JSON -> String
