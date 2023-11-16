@@ -1,10 +1,32 @@
 const crypto = require('crypto')
+const fs = require('fs')
 
 function GetDate(){
     const ptDate = Date.now()
     let newDate = new Date(ptDate)
 
     return newDate
+}
+
+function ReadJSONFile(){
+    try{
+        const data = fs.readFileSync('Settings.json', 'utf-8')
+        const objetoJSON = JSON.parse(data)
+
+        return objetoJSON
+    }catch(err){
+        console.error('Erro ao ler o arquivo:', err)
+        return
+    }
+}
+function WriteJSONFile(data){
+    try{
+        fs.writeFileSync('Settings.json',JSON.stringify(data,null,2))
+        return
+    }catch(err){
+        console.error('Erro ao escrever o arquivo:', err)
+        return
+    }
 }
 
 function EncryptJSON(Data,Settings){
@@ -43,4 +65,4 @@ function DecryptJSON(EncryptData,Settings){
     return { decrypted: data}
 }
 
-module.exports = {Setup,EncryptJSON, DecryptJSON}
+module.exports = {EncryptJSON, DecryptJSON, Test}
