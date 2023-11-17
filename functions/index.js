@@ -11,6 +11,11 @@ function GetDate(){
 function ReadJSONFile(){
     try{
         const data = fs.readFileSync('Settings.json', 'utf-8')
+        if(data.length == 0){
+            WriteJSONFile({iv:{}})  // Conteudo padrão
+            return
+        }
+        
         const objetoJSON = JSON.parse(data)
 
         return objetoJSON
@@ -26,6 +31,71 @@ function WriteJSONFile(data){
     }catch(err){
         console.error('Erro ao escrever o arquivo:', err)
         return
+    }
+}
+
+function Setup(Dirname){
+    if(fs.existsSync(Dirname+'\/Settings.json')){
+        console.log('arquivo existe')
+    }else{
+        console.log('não existe')
+        WriteJSONFile({iv:{}}) // Conteudo template
+    }
+    
+    let date = GetDate()
+    let month = date.getMonth()
+    
+    let res = ReadJSONFile()
+    if(res == undefined){
+        WriteJSONFile({iv:{}})
+    }
+    let {iv} = ReadJSONFile()
+    if(iv == undefined){
+        WriteJSONFile({iv: {}})
+        Setup(Dirname)
+        return
+    }
+    let keysIV = Object.keys(iv)
+    let valuesIV = Object.values(iv)
+    let sizeIVValues = valuesIV.length
+
+    if(sizeIVValues == 0){        // Não existe nenhum IV associado
+        for(let i = 0; i< month;i++){
+            valuesIV[i] = 0
+        }
+        valuesIV[month] = crypto.randomBytes(16).toString('hex')
+        if(!(month+1>12)){
+            for(let i= month+1;i<12;i++){
+                valuesIV[i]=0
+            }
+        }
+
+        for(let i = 0; i<12;i++){
+            let value = valuesIV[i]
+            iv[i]=value             // iv já feito
+        }
+    }else if(sizeIVValues>0){    // Em todo e qualquer caso com tamnho superior a 0
+        let MONTH_APROVED = ['0','1','2','3','4','5','6','7','8','9','10','11']
+        keysIV = keysIV.filter((key) => {
+            for(let i = 0; i<MONTH_APROVED.length; i++){
+                if(key == MONTH_APROVED[i]){
+                    return key
+                }
+            }
+        })
+        
+        let CopyIv = {...iv}
+        iv = {}
+        
+        for(let i=0;i<keysIV.length;i++){
+            iv[keysIV[i]] = CopyIv[keysIV[i]]   // iv já feito
+        }
+    }
+    WriteJSONFile({iv})
+
+    if(Object.keys(iv).length == 0){
+        // Caso 
+        Setup(Dirname)
     }
 }
 
@@ -65,4 +135,4 @@ function DecryptJSON(EncryptData,Settings){
     return { decrypted: data}
 }
 
-module.exports = {EncryptJSON, DecryptJSON, Test}
+module.exports = {EncryptJSON, DecryptJSON, Setup}
